@@ -25,11 +25,11 @@ func main() {
 	defer listener.Close()
 
 	wg := sync.WaitGroup{}
-	connection_pool := make(chan net.Conn, CONNECTION_POOL_SIZE)
-	defer close(connection_pool)
+	connPool := make(chan net.Conn, CONNECTION_POOL_SIZE)
+	defer close(connPool)
 
-	go worker.FillConnectionPool(listener, connection_pool)
-	worker.WorkerPool(WORKERS_COUNT, connection_pool, &wg)
+	go worker.FillConnectionPool(listener, connPool)
+	worker.WorkerPool(WORKERS_COUNT, connPool, &wg)
 
 	wg.Wait()
 

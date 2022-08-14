@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
-func ProcessText(conn net.Conn, workerId int, full_path string, contentType string, sendBody bool) {
-	content, err := utils.ReadTextContent(full_path)
+func ProcessText(conn net.Conn, workerId int, path string, contentType string, sendBody bool) {
+	content, err := utils.ReadTextContent(path)
 	if err != nil {
 		log.Println("Worker ", workerId, " ", err)
 	}

@@ -8,11 +8,13 @@ import (
 	"time"
 )
 
-func ProcesssApplication(conn net.Conn, workerId int, file_path string, contentType string, sendBody bool) {
+func ProcesssApplication(conn net.Conn, workerId int, path string, contentType string, sendBody bool) {
 	log.Println("Worker ", workerId, "Run Application Processor")
-	content, err := utils.ReadByteContent(file_path)
+	content, err := utils.ReadByteContent(path)
 	if err != nil {
+		// Тут в идеале надо 5хх
 		log.Println("Worker ", workerId, " ", err)
+
 	}
 
 	headers := map[string]string{
