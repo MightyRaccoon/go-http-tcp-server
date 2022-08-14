@@ -8,9 +8,9 @@ import (
 	"time"
 )
 
-func ProcesssImage(conn net.Conn, workerId int, file_path string, contentType string, sendBody bool) {
+func ProcesssImage(conn net.Conn, workerId int, path string, contentType string, sendBody bool) {
 	log.Println("Worker ", workerId, "Run Iamge Processor")
-	content, err := utils.ReadByteContent(file_path)
+	content, err := utils.ReadByteContent(path)
 	if err != nil {
 		log.Println("Worker ", workerId, " ", err)
 	}

@@ -6,29 +6,28 @@ import (
 	"strings"
 )
 
-func DefineContentType(path string) string {
-	content_map := map[string]string{
-		"html": "text/html",
-		"css":  "text/css",
-		"js":   "application/javascript",
-		"jpg":  "image/jpeg",
-		"jpeg": "image/jpeg",
-		"png":  "image/png",
-		"gif":  "image/gif",
-		"swf":  "application/x-shockwave-flash",
-		"txt":  "text/plain",
+func DefineContentType(path string) (string, string) {
+	contentMap := map[string][2]string{
+		"html": {"text", "text/html"},
+		"css":  {"text", "text/css"},
+		"js":   {"application", "application/javascript"},
+		"jpg":  {"image", "image/jpeg"},
+		"jpeg": {"image", "image/jpeg"},
+		"png":  {"image", "image/png"},
+		"gif":  {"image", "image/gif"},
+		"swf":  {"application", "application/x-shockwave-flash"},
+		"txt":  {"text", "text/plain"},
 	}
 	// Костыль, чтоб понять, что запрос к директории
 	if []rune(path)[len([]rune(path))-1] == '/' {
-		return "directory"
+		return "directory", "text/html"
 	}
 	splitted := strings.Split(path, ".")
-	file_extension := strings.ToLower(splitted[len(splitted)-1])
-	return content_map[file_extension]
+	fileExtension := strings.ToLower(splitted[len(splitted)-1])
+	return contentMap[fileExtension][0], contentMap[fileExtension][1]
 }
 
-func ReadTextContent(path string) (data string, err error) {
-
+func ReadTextContent(path string) (string, error) {
 	content, err := ioutil.ReadFile(path)
 	if err != nil {
 		return "", err
@@ -41,9 +40,7 @@ func ReadByteContent(path string) ([]byte, error) {
 	if err != nil {
 		return []byte{}, err
 	}
-
 	return image, err
-
 }
 
 func CheckFileExists(path string) bool {

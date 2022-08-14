@@ -8,23 +8,22 @@ import (
 	"time"
 )
 
-func ProcesssDirectory(conn net.Conn, workerId int, full_path string, sendBody bool) {
-	full_path = full_path + "/index.html"
-
-	headers := map[string]string{
-		"Server: ":     strconv.Itoa(workerId),
-		"Date: ":       time.Now().String(),
-		"Connection: ": "close",
-	}
+func ProcesssDirectory(conn net.Conn, workerId int, path string, sendBody bool) {
+	fullPath := path + "/index.html"
 
 	//Если файла не существует, то отдает 403
-	if !utils.CheckFileExists(full_path) {
+	if !utils.CheckFileExists(fullPath) {
+		headers := map[string]string{
+			"Server: ":     strconv.Itoa(workerId),
+			"Date: ":       time.Now().String(),
+			"Connection: ": "close",
+		}
 		utils.Response403(conn, headers)
 		return
 	}
 
 	// Если файл существует, то пытаемся обработать
-	body, err := utils.ReadTextContent(full_path)
+	body, err := utils.ReadTextContent(fullPath)
 	if err != nil {
 		// Вообще, технически тут должна быть какая-нибудь 5xx
 		log.Println("Worker ", workerId, "Can't read file: ", err)

@@ -7,7 +7,6 @@ import (
 )
 
 func ReadRequest(conn net.Conn) (string, error) {
-
 	reader := bufio.NewReader(conn)
 	buf, err := reader.ReadString('\n')
 	if err != nil {
@@ -17,15 +16,14 @@ func ReadRequest(conn net.Conn) (string, error) {
 }
 
 func ParseRequest(request string) (string, string) {
-
 	splitted := strings.Split(request, " ")
-	if len(splitted) < 3 {
+
+	switch {
+	case len(splitted) < 3:
 		return "", ""
+	case len(splitted) == 3: //Есть пробелы -> в splitted 3 элемента, значит пробелы заменились на %20
+		return splitted[0], "./data" + strings.ReplaceAll(splitted[1], "%20", " ")
+	default:
+		return splitted[0], "./data" + strings.Join(splitted[1:len(splitted)-1], " ")
 	}
-	//Есть пробелы -> в splitted 3 элемента, значит пробелы заменились на %20
-	if len(splitted) == 3 {
-		return splitted[0], strings.ReplaceAll(splitted[1], "%20", " ")
-	}
-	path := strings.Join(splitted[1:len(splitted)-1], " ")
-	return splitted[0], path
 }

@@ -5,7 +5,6 @@ import (
 	"lowlevelserver/processors" // импортируется директория, а не конкретные файлы
 	"lowlevelserver/utils"
 	"net"
-	"strings"
 	"sync"
 )
 
@@ -25,30 +24,28 @@ func worker(wg *sync.WaitGroup, workerId int, pool chan net.Conn) {
 		log.Println("Worker", workerId, "Got request:", request)
 
 		method, path := utils.ParseRequest(request)
-		full_path := "./data" + path
 		switch method {
 		case "GET":
 
 			log.Println("Worker ", workerId, " Got 'GET' method")
-			if !utils.CheckFileExists(full_path) {
+			if !utils.CheckFileExists(path) {
 				log.Println("Worker ", workerId, " :file not exists: ")
 				processors.ProcesssNotExistedContent(conn, workerId)
 				break
 			}
 
-			contentType := utils.DefineContentType(full_path)
-			contentType_first_type := strings.Split(contentType, "/")[0]
+			fileType, contentType := utils.DefineContentType(path)
 			log.Println("Worker ", workerId, " Content type: ", contentType)
 
-			switch contentType_first_type {
+			switch fileType {
 			case "text":
-				processors.ProcessText(conn, workerId, full_path, contentType, true)
+				processors.ProcessText(conn, workerId, path, contentType, true)
 			case "image":
-				processors.ProcesssImage(conn, workerId, full_path, contentType, true)
+				processors.ProcesssImage(conn, workerId, path, contentType, true)
 			case "application": // Непонятно как отображать
-				processors.ProcesssApplication(conn, workerId, full_path, contentType, true)
+				processors.ProcesssApplication(conn, workerId, path, contentType, true)
 			case "directory":
-				processors.ProcesssDirectory(conn, workerId, full_path, true)
+				processors.ProcesssDirectory(conn, workerId, path, true)
 			default:
 				log.Println("Worker ", workerId, " Got unknkown type") // В идеале тут надо какую-нибудь 4хх отправить в ответ.
 			}
@@ -57,25 +54,24 @@ func worker(wg *sync.WaitGroup, workerId int, pool chan net.Conn) {
 
 			log.Println("Worker ", workerId, "Got 'HEAD' method")
 
-			if !utils.CheckFileExists(full_path) {
+			if !utils.CheckFileExists(path) {
 				log.Println("Worker ", workerId, " ", err)
 				processors.ProcesssNotExistedContent(conn, workerId)
 				break
 			}
 
-			contentType := utils.DefineContentType(full_path)
-			contentType_first_type := strings.Split(contentType, "/")[0]
+			fileType, contentType := utils.DefineContentType(path)
 			log.Println("Worker ", workerId, " Content type: ", contentType)
 
-			switch contentType_first_type {
+			switch fileType {
 			case "text":
-				processors.ProcessText(conn, workerId, full_path, contentType, false)
+				processors.ProcessText(conn, workerId, path, contentType, false)
 			case "image":
-				processors.ProcesssImage(conn, workerId, full_path, contentType, false)
+				processors.ProcesssImage(conn, workerId, path, contentType, false)
 			case "application":
-				processors.ProcesssApplication(conn, workerId, full_path, contentType, false)
+				processors.ProcesssApplication(conn, workerId, path, contentType, false)
 			case "directory":
-				processors.ProcesssDirectory(conn, workerId, full_path, false)
+				processors.ProcesssDirectory(conn, workerId, path, false)
 			default:
 				log.Println("Worker ", workerId, " Got unknkown type")
 			}
