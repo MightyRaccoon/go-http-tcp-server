@@ -1,23 +1,32 @@
 package processors
 
 import (
-	"log"
+	"context"
+	"lowlevelserver/logger"
 	"lowlevelserver/utils"
 	"net"
 	"strconv"
 	"time"
 )
 
-func ProcessText(conn net.Conn, workerId int, path string, contentType string, sendBody bool) {
+func ProcessText(ctx context.Context, conn net.Conn, path string, contentType string, sendBody bool) {
+	logger.Fetch(ctx).Infow(
+		"Run Text Processor",
+		"Worker", ctx.Value("Worker"),
+	)
 	content, err := utils.ReadTextContent(path)
 	if err != nil {
-		log.Println("Worker ", workerId, " ", err)
+		logger.Fetch(ctx).Errorw(
+			"Path not exists",
+			"Worker", ctx.Value("Worker"),
+			"Path", path,
+		)
 	}
 
 	headers := map[string]string{
 		"Content-Length: ": strconv.Itoa(len(content)),
 		"Content-Type: ":   contentType,
-		"Server: ":         strconv.Itoa(workerId),
+		"Server: ":         strconv.Itoa(ctx.Value("Worker").(int)),
 		"Date: ":           time.Now().String(),
 		"Connection: ":     "close",
 	}

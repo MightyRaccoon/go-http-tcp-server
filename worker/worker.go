@@ -1,106 +1,168 @@
 package worker
 
 import (
-	"log"
+	"context"
+	"lowlevelserver/logger"
 	"lowlevelserver/processors" // импортируется директория, а не конкретные файлы
 	"lowlevelserver/utils"
 	"net"
 	"sync"
 )
 
-func worker(wg *sync.WaitGroup, workerId int, pool chan net.Conn) {
+func worker(ctx context.Context, wg *sync.WaitGroup, workerId int, pool chan net.Conn) {
 
-	log.Println("Worker ", workerId, " start")
+	ctx = context.WithValue(ctx, "Worker", workerId)
+	logger.Fetch(ctx).Infow(
+		"Worker started",
+		"Worker", ctx.Value("Worker"),
+	)
 	defer wg.Done()
 
 	for conn := range pool {
 
 		request, err := utils.ReadRequest(conn)
 		if err != nil {
-			log.Println("Worker ", workerId, " got error: ", err)
+			logger.Fetch(ctx).Errorw(
+				"Can't read data from connection",
+				"Worker", ctx.Value("Worker"),
+				"Error", err,
+			)
 			continue
 		}
 
-		log.Println("Worker", workerId, "Got request:", request)
+		logger.Fetch(ctx).Infow(
+			"Got request",
+			"Worker", ctx.Value("Worker"),
+			"Request", request,
+		)
 
 		method, path := utils.ParseRequest(request)
 		switch method {
 		case "GET":
 
-			log.Println("Worker ", workerId, " Got 'GET' method")
+			logger.Fetch(ctx).Infow(
+				"Got 'GET' method",
+				"Worker", ctx.Value("Worker"),
+			)
 			if !utils.CheckFileExists(path) {
-				log.Println("Worker ", workerId, " :file not exists: ")
-				processors.ProcesssNotExistedContent(conn, workerId)
+				logger.Fetch(ctx).Warnw(
+					"Path not exists",
+					"Worker", ctx.Value("Worker"),
+				)
+				processors.ProcesssNotExistedContent(ctx, conn)
 				break
 			}
 
 			fileType, contentType := utils.DefineContentType(path)
-			log.Println("Worker ", workerId, " Content type: ", contentType)
+			logger.Fetch(ctx).Infow(
+				"Content type is defined",
+				"Worker", ctx.Value("Worker"),
+				"Request", request,
+				"FileType", fileType,
+				"ContentType", contentType,
+			)
 
 			switch fileType {
 			case "text":
-				processors.ProcessText(conn, workerId, path, contentType, true)
+				processors.ProcessText(ctx, conn, path, contentType, true)
 			case "image":
-				processors.ProcesssImage(conn, workerId, path, contentType, true)
+				processors.ProcesssImage(ctx, conn, path, contentType, true)
 			case "application": // Непонятно как отображать
-				processors.ProcesssApplication(conn, workerId, path, contentType, true)
+				processors.ProcesssApplication(ctx, conn, path, contentType, true)
 			case "directory":
-				processors.ProcesssDirectory(conn, workerId, path, true)
+				processors.ProcesssDirectory(ctx, conn, path, true)
 			default:
-				log.Println("Worker ", workerId, " Got unknkown type") // В идеале тут надо какую-нибудь 4хх отправить в ответ.
+				// В идеале тут надо какую-нибудь 4хх отправить в ответ.
+				logger.Fetch(ctx).Infow(
+					"Got unknown type",
+					"Worker", ctx.Value("Worker"),
+					"Request", request,
+				)
 			}
 
 		case "HEAD":
 
-			log.Println("Worker ", workerId, "Got 'HEAD' method")
+			logger.Fetch(ctx).Infow(
+				"Got 'HEAD' method",
+				"Worker", ctx.Value("Worker"),
+			)
 
 			if !utils.CheckFileExists(path) {
-				log.Println("Worker ", workerId, " ", err)
-				processors.ProcesssNotExistedContent(conn, workerId)
+				logger.Fetch(ctx).Warnw(
+					"Path not exists",
+					"Worker", ctx.Value("Worker"),
+				)
+				processors.ProcesssNotExistedContent(ctx, conn)
 				break
 			}
 
 			fileType, contentType := utils.DefineContentType(path)
-			log.Println("Worker ", workerId, " Content type: ", contentType)
+			logger.Fetch(ctx).Infow(
+				"Content type is defined",
+				"Worker", ctx.Value("Worker"),
+				"Request", request,
+				"FileType", fileType,
+				"ContentType", contentType,
+			)
 
 			switch fileType {
 			case "text":
-				processors.ProcessText(conn, workerId, path, contentType, false)
+				processors.ProcessText(ctx, conn, path, contentType, false)
 			case "image":
-				processors.ProcesssImage(conn, workerId, path, contentType, false)
+				processors.ProcesssImage(ctx, conn, path, contentType, false)
 			case "application":
-				processors.ProcesssApplication(conn, workerId, path, contentType, false)
+				processors.ProcesssApplication(ctx, conn, path, contentType, false)
 			case "directory":
-				processors.ProcesssDirectory(conn, workerId, path, false)
+				processors.ProcesssDirectory(ctx, conn, path, false)
 			default:
-				log.Println("Worker ", workerId, " Got unknkown type")
+				// В идеале тут надо какую-нибудь 4хх отправить в ответ.
+				logger.Fetch(ctx).Infow(
+					"Got unknown type",
+					"Worker", ctx.Value("Worker"),
+					"Request", request,
+				)
 			}
 
 		default:
-			log.Println("Worker ", workerId, "Not supported")
-			processors.ProcesssNotSupportedMethod(conn, workerId)
+			logger.Fetch(ctx).Infow(
+				"Method not supported",
+				"Worker", ctx.Value("Worker"),
+				"Request", request,
+				"Method", method,
+			)
+			processors.ProcesssNotSupportedMethod(ctx, conn)
 		}
 
-		log.Println("Worker", workerId, "Processed request:", request)
+		logger.Fetch(ctx).Infow(
+			"Processed",
+			"Worker", ctx.Value("Worker"),
+			"Request", request,
+		)
 		conn.Close()
 	}
 
 }
 
-func WorkerPool(workersCount int, pool chan net.Conn, wg *sync.WaitGroup) {
-
+func WorkerPool(ctx context.Context, workersCount int, pool chan net.Conn, wg *sync.WaitGroup) {
+	logger.Fetch(ctx).Infow(
+		"WorkerPool started",
+		"Workers count", workersCount,
+	)
 	for i := 0; i < workersCount; i++ {
 		wg.Add(1)
-		go worker(wg, i, pool)
+		go worker(ctx, wg, i, pool)
 	}
 
 }
 
-func FillConnectionPool(listener net.Listener, pool chan net.Conn) {
+func FillConnectionPool(ctx context.Context, listener net.Listener, pool chan net.Conn) {
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			log.Println(err)
+			logger.Fetch(ctx).Errorw(
+				"Can't create connection",
+				"Error", err,
+			)
 			continue
 		}
 		pool <- conn

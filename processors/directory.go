@@ -1,20 +1,31 @@
 package processors
 
 import (
-	"log"
+	"context"
+	"lowlevelserver/logger"
 	"lowlevelserver/utils"
 	"net"
 	"strconv"
 	"time"
 )
 
-func ProcesssDirectory(conn net.Conn, workerId int, path string, sendBody bool) {
+func ProcesssDirectory(ctx context.Context, conn net.Conn, path string, sendBody bool) {
+	logger.Fetch(ctx).Infow(
+		"Run Directory Processor",
+		"Worker", ctx.Value("Worker"),
+	)
+
 	fullPath := path + "/index.html"
 
 	//Если файла не существует, то отдает 403
 	if !utils.CheckFileExists(fullPath) {
+		logger.Fetch(ctx).Warnw(
+			"Path not exists",
+			"Worker", ctx.Value("Worker"),
+			"Path", fullPath,
+		)
 		headers := map[string]string{
-			"Server: ":     strconv.Itoa(workerId),
+			"Server: ":     strconv.Itoa(ctx.Value("Worker").(int)),
 			"Date: ":       time.Now().String(),
 			"Connection: ": "close",
 		}
@@ -26,7 +37,12 @@ func ProcesssDirectory(conn net.Conn, workerId int, path string, sendBody bool) 
 	body, err := utils.ReadTextContent(fullPath)
 	if err != nil {
 		// Вообще, технически тут должна быть какая-нибудь 5xx
-		log.Println("Worker ", workerId, "Can't read file: ", err)
+		logger.Fetch(ctx).Errorw(
+			"Can't read text content",
+			"Worker", ctx.Value("Worker"),
+			"Error", err,
+		)
+		return
 	}
-	ProcessText(conn, workerId, body, "text/html", true)
+	ProcessText(ctx, conn, body, "text/html", true)
 }
