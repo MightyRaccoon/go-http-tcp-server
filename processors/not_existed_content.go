@@ -1,15 +1,21 @@
 package processors
 
 import (
+	"context"
+	"lowlevelserver/logger"
 	"lowlevelserver/utils"
 	"net"
 	"strconv"
 	"time"
 )
 
-func ProcesssNotExistedContent(conn net.Conn, workerId int) {
+func ProcesssNotExistedContent(ctx context.Context, conn net.Conn) {
+	logger.Fetch(ctx).Infow(
+		"Run Not Existed Content Processor",
+		"Worker", ctx.Value("Worker"),
+	)
 	headers := map[string]string{
-		"Server: ":     strconv.Itoa(workerId),
+		"Server: ":     strconv.Itoa(ctx.Value("Worker").(int)),
 		"Date: ":       time.Now().String(),
 		"Connection: ": "close",
 	}

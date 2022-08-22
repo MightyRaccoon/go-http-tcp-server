@@ -1,7 +1,8 @@
 package main
 
 import (
-	"log" //zap
+	"context"
+	"lowlevelserver/logger"
 	"lowlevelserver/worker"
 	"net"
 	"strconv"
@@ -16,10 +17,17 @@ const (
 
 func main() {
 
-	log.Println("Start")
+	ctx := context.Background()
+	ctx = logger.SetLogger(ctx)
+	defer logger.Fetch(ctx).Sync()
+
+	logger.Fetch(ctx).Infow("Start")
 	listener, err := net.Listen("tcp", ":"+strconv.Itoa(PORT))
 	if err != nil {
-		log.Fatal("Can't create a listener: ", err)
+		logger.Fetch(ctx).Fatalw(
+			"Can't create a listener",
+			"Error", err,
+		)
 		return
 	}
 	defer listener.Close()
@@ -28,8 +36,8 @@ func main() {
 	connPool := make(chan net.Conn, CONNECTION_POOL_SIZE)
 	defer close(connPool)
 
-	go worker.FillConnectionPool(listener, connPool)
-	worker.WorkerPool(WORKERS_COUNT, connPool, &wg)
+	go worker.FillConnectionPool(ctx, listener, connPool)
+	worker.WorkerPool(ctx, WORKERS_COUNT, connPool, &wg)
 
 	wg.Wait()
 

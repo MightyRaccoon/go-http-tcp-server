@@ -4,6 +4,8 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 func DefineContentType(path string) (string, string) {
@@ -30,7 +32,7 @@ func DefineContentType(path string) (string, string) {
 func ReadTextContent(path string) (string, error) {
 	content, err := ioutil.ReadFile(path)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "ReadTextContent")
 	}
 	return string(content), nil
 }
@@ -38,9 +40,9 @@ func ReadTextContent(path string) (string, error) {
 func ReadByteContent(path string) ([]byte, error) {
 	image, err := ioutil.ReadFile(path)
 	if err != nil {
-		return []byte{}, err
+		return []byte{}, errors.Wrap(err, "ReadByteContent")
 	}
-	return image, err
+	return image, nil
 }
 
 func CheckFileExists(path string) bool {

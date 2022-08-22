@@ -4,13 +4,15 @@ import (
 	"bufio"
 	"net"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 func ReadRequest(conn net.Conn) (string, error) {
 	reader := bufio.NewReader(conn)
 	buf, err := reader.ReadString('\n')
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "ReadRequest")
 	}
 	return buf, nil
 }

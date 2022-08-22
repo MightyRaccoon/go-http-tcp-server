@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"log"
 	"net"
+
+	"github.com/pkg/errors"
 )
 
-// *net.Conn -> net.Conn
 func AddHeader(conn net.Conn, headers map[string]string) {
 	for header, value := range headers {
 		fmt.Fprint(conn, header, value, "\r\n")
@@ -40,7 +41,7 @@ func Response200Bytes(conn net.Conn, content []byte, headers map[string]string, 
 	if sendBody {
 		_, err := conn.Write(content)
 		if err != nil {
-			log.Println(err)
+			log.Println(errors.Wrap(err, "Response200Bytes"))
 		}
 	}
 }
