@@ -11,10 +11,10 @@ import (
 
 func worker(ctx context.Context, wg *sync.WaitGroup, workerId int, pool chan net.Conn) {
 
-	ctx = context.WithValue(ctx, "Worker", workerId)
+	ctx = context.WithValue(ctx, utils.WorkerId, workerId)
 	logger.Fetch(ctx).Infow(
 		"Worker started",
-		"Worker", ctx.Value("Worker"),
+		"Worker", ctx.Value(utils.WorkerId),
 	)
 	defer wg.Done()
 
@@ -24,7 +24,7 @@ func worker(ctx context.Context, wg *sync.WaitGroup, workerId int, pool chan net
 		if err != nil {
 			logger.Fetch(ctx).Errorw(
 				"Can't read data from connection",
-				"Worker", ctx.Value("Worker"),
+				"Worker", ctx.Value(utils.WorkerId),
 				"Error", err,
 			)
 			continue
@@ -32,7 +32,7 @@ func worker(ctx context.Context, wg *sync.WaitGroup, workerId int, pool chan net
 
 		logger.Fetch(ctx).Infow(
 			"Got request",
-			"Worker", ctx.Value("Worker"),
+			"Worker", ctx.Value(utils.WorkerId),
 			"Request", request,
 		)
 
@@ -42,12 +42,12 @@ func worker(ctx context.Context, wg *sync.WaitGroup, workerId int, pool chan net
 
 			logger.Fetch(ctx).Infow(
 				"Got 'GET' method",
-				"Worker", ctx.Value("Worker"),
+				"Worker", ctx.Value(utils.WorkerId),
 			)
 			if !utils.CheckFileExists(path) {
 				logger.Fetch(ctx).Warnw(
 					"Path not exists",
-					"Worker", ctx.Value("Worker"),
+					"Worker", ctx.Value(utils.WorkerId),
 				)
 				processors.ProcesssNotExistedContent(ctx, conn)
 				break
@@ -56,7 +56,7 @@ func worker(ctx context.Context, wg *sync.WaitGroup, workerId int, pool chan net
 			fileType, contentType := utils.DefineContentType(path)
 			logger.Fetch(ctx).Infow(
 				"Content type is defined",
-				"Worker", ctx.Value("Worker"),
+				"Worker", ctx.Value(utils.WorkerId),
 				"Request", request,
 				"FileType", fileType,
 				"ContentType", contentType,
@@ -75,7 +75,7 @@ func worker(ctx context.Context, wg *sync.WaitGroup, workerId int, pool chan net
 				// В идеале тут надо какую-нибудь 4хх отправить в ответ.
 				logger.Fetch(ctx).Infow(
 					"Got unknown type",
-					"Worker", ctx.Value("Worker"),
+					"Worker", ctx.Value(utils.WorkerId),
 					"Request", request,
 				)
 			}
@@ -84,13 +84,13 @@ func worker(ctx context.Context, wg *sync.WaitGroup, workerId int, pool chan net
 
 			logger.Fetch(ctx).Infow(
 				"Got 'HEAD' method",
-				"Worker", ctx.Value("Worker"),
+				"Worker", ctx.Value(utils.WorkerId),
 			)
 
 			if !utils.CheckFileExists(path) {
 				logger.Fetch(ctx).Warnw(
 					"Path not exists",
-					"Worker", ctx.Value("Worker"),
+					"Worker", ctx.Value(utils.WorkerId),
 				)
 				processors.ProcesssNotExistedContent(ctx, conn)
 				break
@@ -99,7 +99,7 @@ func worker(ctx context.Context, wg *sync.WaitGroup, workerId int, pool chan net
 			fileType, contentType := utils.DefineContentType(path)
 			logger.Fetch(ctx).Infow(
 				"Content type is defined",
-				"Worker", ctx.Value("Worker"),
+				"Worker", ctx.Value(utils.WorkerId),
 				"Request", request,
 				"FileType", fileType,
 				"ContentType", contentType,
@@ -118,7 +118,7 @@ func worker(ctx context.Context, wg *sync.WaitGroup, workerId int, pool chan net
 				// В идеале тут надо какую-нибудь 4хх отправить в ответ.
 				logger.Fetch(ctx).Infow(
 					"Got unknown type",
-					"Worker", ctx.Value("Worker"),
+					"Worker", ctx.Value(utils.WorkerId),
 					"Request", request,
 				)
 			}
@@ -126,7 +126,7 @@ func worker(ctx context.Context, wg *sync.WaitGroup, workerId int, pool chan net
 		default:
 			logger.Fetch(ctx).Infow(
 				"Method not supported",
-				"Worker", ctx.Value("Worker"),
+				"Worker", ctx.Value(utils.WorkerId),
 				"Request", request,
 				"Method", method,
 			)
@@ -135,7 +135,7 @@ func worker(ctx context.Context, wg *sync.WaitGroup, workerId int, pool chan net
 
 		logger.Fetch(ctx).Infow(
 			"Processed",
-			"Worker", ctx.Value("Worker"),
+			"Worker", ctx.Value(utils.WorkerId),
 			"Request", request,
 		)
 		conn.Close()

@@ -12,10 +12,10 @@ import (
 func ProcesssNotExistedContent(ctx context.Context, conn net.Conn) {
 	logger.Fetch(ctx).Infow(
 		"Run Not Existed Content Processor",
-		"Worker", ctx.Value("Worker"),
+		"Worker", ctx.Value(utils.WorkerId),
 	)
 	headers := map[string]string{
-		"Server: ":     strconv.Itoa(ctx.Value("Worker").(int)),
+		"Server: ":     strconv.Itoa(ctx.Value(utils.WorkerId).(int)),
 		"Date: ":       time.Now().String(),
 		"Connection: ": "close",
 	}

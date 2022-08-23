@@ -12,10 +12,10 @@ import (
 func ProcesssNotSupportedMethod(ctx context.Context, conn net.Conn) {
 	logger.Fetch(ctx).Infow(
 		"Run Not Supported Method Processor",
-		"Worker", ctx.Value("Worker"),
+		"Worker", ctx.Value(utils.WorkerId),
 	)
 	headers := map[string]string{
-		"Server":     strconv.Itoa(ctx.Value("Worker").(int)),
+		"Server":     strconv.Itoa(ctx.Value(utils.WorkerId).(int)),
 		"Date":       time.Now().String(),
 		"Connection": "close",
 	}

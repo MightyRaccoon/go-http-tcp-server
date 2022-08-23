@@ -12,13 +12,13 @@ import (
 func ProcessText(ctx context.Context, conn net.Conn, path string, contentType string, sendBody bool) {
 	logger.Fetch(ctx).Infow(
 		"Run Text Processor",
-		"Worker", ctx.Value("Worker"),
+		"Worker", ctx.Value(utils.WorkerId),
 	)
 	content, err := utils.ReadTextContent(path)
 	if err != nil {
 		logger.Fetch(ctx).Errorw(
 			"Path not exists",
-			"Worker", ctx.Value("Worker"),
+			"Worker", ctx.Value(utils.WorkerId),
 			"Path", path,
 		)
 	}
@@ -26,7 +26,7 @@ func ProcessText(ctx context.Context, conn net.Conn, path string, contentType st
 	headers := map[string]string{
 		"Content-Length: ": strconv.Itoa(len(content)),
 		"Content-Type: ":   contentType,
-		"Server: ":         strconv.Itoa(ctx.Value("Worker").(int)),
+		"Server: ":         strconv.Itoa(ctx.Value(utils.WorkerId).(int)),
 		"Date: ":           time.Now().String(),
 		"Connection: ":     "close",
 	}
