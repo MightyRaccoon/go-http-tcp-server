@@ -12,14 +12,14 @@ import (
 func ProcesssImage(ctx context.Context, conn net.Conn, path string, contentType string, sendBody bool) {
 	logger.Fetch(ctx).Infow(
 		"Run Image Processor",
-		"Worker", ctx.Value("Worker"),
+		"Worker", ctx.Value(utils.WorkerId),
 	)
 
 	content, err := utils.ReadByteContent(path)
 	if err != nil {
 		logger.Fetch(ctx).Errorw(
 			"Can't read byte content",
-			"Worker", ctx.Value("Worker"),
+			"Worker", ctx.Value(utils.WorkerId),
 			"Error", err,
 		)
 	}
@@ -27,7 +27,7 @@ func ProcesssImage(ctx context.Context, conn net.Conn, path string, contentType 
 	headers := map[string]string{
 		"Content-Length: ": strconv.Itoa(len(content)),
 		"Content-Type: ":   contentType,
-		"Server: ":         strconv.Itoa(ctx.Value("Worker").(int)),
+		"Server: ":         strconv.Itoa(ctx.Value(utils.WorkerId).(int)),
 		"Date: ":           time.Now().String(),
 		"Connection:":      "close",
 	}

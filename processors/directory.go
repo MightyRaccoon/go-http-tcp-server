@@ -12,7 +12,7 @@ import (
 func ProcesssDirectory(ctx context.Context, conn net.Conn, path string, sendBody bool) {
 	logger.Fetch(ctx).Infow(
 		"Run Directory Processor",
-		"Worker", ctx.Value("Worker"),
+		"Worker", ctx.Value(utils.WorkerId),
 	)
 
 	fullPath := path + "/index.html"
@@ -21,11 +21,11 @@ func ProcesssDirectory(ctx context.Context, conn net.Conn, path string, sendBody
 	if !utils.CheckFileExists(fullPath) {
 		logger.Fetch(ctx).Warnw(
 			"Path not exists",
-			"Worker", ctx.Value("Worker"),
+			"Worker", ctx.Value(utils.WorkerId),
 			"Path", fullPath,
 		)
 		headers := map[string]string{
-			"Server: ":     strconv.Itoa(ctx.Value("Worker").(int)),
+			"Server: ":     strconv.Itoa(ctx.Value(utils.WorkerId).(int)),
 			"Date: ":       time.Now().String(),
 			"Connection: ": "close",
 		}
@@ -39,7 +39,7 @@ func ProcesssDirectory(ctx context.Context, conn net.Conn, path string, sendBody
 		// Вообще, технически тут должна быть какая-нибудь 5xx
 		logger.Fetch(ctx).Errorw(
 			"Can't read text content",
-			"Worker", ctx.Value("Worker"),
+			"Worker", ctx.Value(utils.WorkerId),
 			"Error", err,
 		)
 		return
